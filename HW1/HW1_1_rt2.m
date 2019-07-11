@@ -1,0 +1,63 @@
+%% HW1_1 in rtheta2 reference frame
+close all;
+clear all;
+clc;
+
+%% Set variable 
+% Use rtheta2 frame as a reference frame
+syms b s s_dot c th th_dot w
+assume(th, 'real');
+R = [b;0;0];
+R_dot = [0;b*w;0];
+R_dot2 = [-b*w^2;0;0];
+rho = [s+c;0;0];
+v_rel = [s_dot;0;0];
+a_rel = 0;
+ang_vel = [ 0    -w th_dot;...
+            w     0    0   ;...
+         -th_dot  0    0  ];
+ang_acc = [ 0       0           0      ;...
+            0       0       w*th_dot ;...
+            0  -w*th_dot      0     ];
+T = [sin(th) 0  cos(th) ;...
+     cos(th) 0 -sin(th) ;...
+       0     1     0   ];
+rho = T'*[s+c;0;0]; %change frame rt2->123
+v_rel = T'*[s_dot;0;0]; %change frame rt2->123
+velocity = vel(R_dot,v_rel,ang_vel,rho);
+acceleration = acc(R_dot2,a_rel,ang_vel,rho,ang_acc,v_rel);
+velocity
+acceleration
+
+%% Substitution 
+b = 0.1; %m
+s_dot = 1; %m/s
+c = 0.5; %m
+th_dot = 5; %rad/s
+w = 10; %rad/s
+time = [0:0.01:10]; %s
+for i = 1:length(time);
+    th = th_dot*time(i); %rad
+    s = s_dot*time(i); %m
+    vel_subs = subs(velocity);
+    acc_subs = subs(acceleration);
+    vel_mag(i) = norm(vel_subs);
+    acc_mag(i) = norm(acc_subs);
+end
+vel_mag = double(vel_mag);
+acc_mag = double(acc_mag);
+
+%% Plot
+plot(time,vel_mag,time,acc_mag);
+legend('velocity [m/s]','acceleration [m/s^2]','Location','northwest');
+grid on;
+xlabel('Time[s]');
+title ('v-t, a-t');
+
+%% Set function
+function v = vel(R_dot,v_rel,ang_vel,rho)
+v = R_dot+v_rel+ang_vel*rho;
+end
+function a = acc(R_dot2,a_rel,ang_vel,rho,ang_acc,v_rel)
+a = R_dot2+a_rel+ang_vel*ang_vel*rho+ang_acc*rho+2*ang_vel*v_rel;
+end
